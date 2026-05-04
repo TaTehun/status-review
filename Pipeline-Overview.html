@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tender Status Review — Pipeline Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f4f6f9;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.3rem; font-weight: 700; color: #1a202c; }
+    header p  { font-size: 0.82rem; color: #4a5568; margin-top: 3px; }
+    .badge {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #bee3f8;
+    }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    section { margin-bottom: 48px; }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #4a5568;
+      margin-bottom: 18px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #2b6cb0;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #4a5568;
+      margin-top: 6px;
+    }
+
+    /* Flowchart */
+    .flowchart {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 36px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .fc-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      width: 100%;
+    }
+    .fc-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px 18px;
+      min-width: 130px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .fc-box.start {
+      background: #ebf8ff;
+      border: 1.5px solid #90cdf4;
+      color: #2b6cb0;
+      border-radius: 24px;
+      min-width: 110px;
+    }
+    .fc-box.process {
+      background: #f7faff;
+      border: 1.5px solid #bee3f8;
+      color: #2d3748;
+    }
+    .fc-box.decision {
+      background: #fffff0;
+      border: 1.5px solid #f6e05e;
+      color: #744210;
+      border-radius: 6px;
+      min-width: 148px;
+      position: relative;
+    }
+    .fc-box.decision::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, #fefcbf, #faf089);
+      border-radius: 6px;
+      z-index: -1;
+    }
+    .fc-box.end-success {
+      background: #f0fff4;
+      border: 1.5px solid #9ae6b4;
+      color: #276749;
+      border-radius: 24px;
+      min-width: 130px;
+    }
+    .fc-box.end-alert {
+      background: #fff5f5;
+      border: 1.5px solid #feb2b2;
+      color: #9b2c2c;
+      border-radius: 24px;
+      min-width: 130px;
+    }
+    .fc-label {
+      font-size: 0.62rem;
+      font-weight: 400;
+      color: #a0aec0;
+      margin-top: 3px;
+    }
+
+    .fc-arrow-down {
+      width: 2px;
+      height: 28px;
+      background: #cbd5e0;
+      margin: 0 auto;
+      position: relative;
+    }
+    .fc-arrow-down::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #cbd5e0;
+    }
+    .fc-arrow-right {
+      width: 40px;
+      height: 2px;
+      background: #cbd5e0;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .fc-arrow-right::after {
+      content: '';
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 6px solid #cbd5e0;
+    }
+    .fc-branch-label {
+      font-size: 0.62rem;
+      color: #a0aec0;
+      margin: 0 6px;
+      white-space: nowrap;
+    }
+
+    /* Pipeline steps */
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .pipeline-step {
+      padding: 24px 20px;
+      border-right: 1px solid #e2e8f0;
+      position: relative;
+    }
+    .pipeline-step:last-child { border-right: none; }
+    .pipeline-step::after {
+      content: '→';
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #cbd5e0;
+      font-size: 1.1rem;
+      z-index: 1;
+    }
+    .pipeline-step:last-child::after { display: none; }
+    .step-num {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      background: #ebf8ff;
+      border-radius: 4px;
+      padding: 2px 7px;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    .step-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+    .step-desc {
+      font-size: 0.73rem;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+
+    /* Features */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .feature-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 22px 20px;
+      border-top: 3px solid #90cdf4;
+    }
+    .feature-title {
+      font-size: 0.87rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 0.75rem;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+
+    /* Error handling */
+    .errors {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .error-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .error-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 6px;
+    }
+    .error-desc {
+      font-size: 0.74rem;
+      color: #4a5568;
+      line-height: 1.6;
+    }
+
+    /* Tech stack */
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tech-pill {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #4a5568;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tech-pill .lang {
+      font-size: 0.65rem;
+      color: #a0aec0;
+      font-weight: 400;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px;
+      font-size: 0.72rem;
+      color: #a0aec0;
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Tender Status Review Pipeline</h1>
+    <p>Automated TMS crawl, export, and email distribution of daily tender status data</p>
+  </div>
+  <span class="badge">Python · Selenium · Automated</span>
+</header>
+
+<main>
+
+  <!-- Stats -->
+  <section>
+    <p class="section-label">At a Glance</p>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value">2</div>
+        <div class="stat-label">Carriers monitored daily</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Tender statuses tracked</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Manual steps</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">.xlsx</div>
+        <div class="stat-label">Formatted export + email</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Export retries on failure</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline Steps -->
+  <section>
+    <p class="section-label">Pipeline Steps</p>
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-num">01</div>
+        <div class="step-title">Login</div>
+        <div class="step-desc">Selenium launches Chrome, navigates to the TMS portal, and authenticates using credentials from a .env file.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">02</div>
+        <div class="step-title">Search</div>
+        <div class="step-desc">Filters by carrier ID, tender status (multi-select via JS), and date range set to TODAY.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">03</div>
+        <div class="step-title">Customize</div>
+        <div class="step-desc">Column layout configured via the site's own JS dual-listbox functions — unwanted columns removed, desired ones ordered.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">04</div>
+        <div class="step-title">Export</div>
+        <div class="step-desc">Export popup handled with window switching. File polled from disk for up to 60s, then renamed and saved.</div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">05</div>
+        <div class="step-title">Send</div>
+        <div class="step-desc">File formatted with openpyxl, HTML summary table built, sent via SMTP with the xlsx attached.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Execution Flow -->
+  <section>
+    <p class="section-label">Execution Flow</p>
+    <div class="flowchart">
+
+      <div class="fc-box start">🕐 Scheduled Run</div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box process">
+        Launch Chrome + Login
+        <span class="fc-label">download.default_directory pref set</span>
+      </div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box process">
+        Navigate → Tender Requests
+        <span class="fc-label">iframe switching · nav frame</span>
+      </div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box process">
+        Set Search Conditions
+        <span class="fc-label">carrier · status (JS) · date = TODAY</span>
+      </div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box process">
+        Customize Columns
+        <span class="fc-label">tmuiduallistboxmoveit · reorder</span>
+      </div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box process">
+        Export Data → Popup
+        <span class="fc-label">switch window · submit · poll disk</span>
+      </div>
+      <div class="fc-arrow-down"></div>
+
+      <div class="fc-box decision">
+        File downloaded?
+      </div>
+
+      <div class="fc-row" style="margin-top:0; align-items:flex-start; width:100%; justify-content:center;">
+
+        <div style="display:flex; flex-direction:column; align-items:center; width:220px;">
+          <div style="display:flex; align-items:center;">
+            <div class="fc-arrow-right" style="width:30px;"></div>
+            <span class="fc-branch-label">No (retry ×5)</span>
+          </div>
+          <div class="fc-box end-alert" style="margin-top:10px;">
+            ⚠️ Log Warning
+            <span class="fc-label">skip email send</span>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; width:280px;">
+          <div style="display:flex; align-items:center;">
+            <span class="fc-branch-label">Yes</span>
+            <div class="fc-arrow-right" style="width:30px;"></div>
+          </div>
+          <div style="width:2px; height:28px; background:#cbd5e0; position:relative; margin-top:10px;">
+            <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #cbd5e0;"></div>
+          </div>
+          <div class="fc-box process">
+            Format xlsx
+            <span class="fc-label">column auto-fit · auto filter</span>
+          </div>
+          <div class="fc-arrow-down"></div>
+          <div class="fc-box process">
+            Build HTML Email Body
+            <span class="fc-label">Load ID + Status · yellow headers</span>
+          </div>
+          <div class="fc-arrow-down"></div>
+          <div class="fc-box end-success">
+            📧 Send via SMTP
+            <span class="fc-label">xlsx attached · HTML body</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Key Technical Highlights -->
+  <section>
+    <p class="section-label">Key Technical Highlights</p>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-title">Hidden Select via JavaScript</div>
+        <div class="feature-desc">The tender status dropdown is a hidden <code>&lt;select&gt;</code> — Selenium can't click it directly. Options are set via <code>execute_script</code> and the site's own <code>showSelected()</code> callback is called to sync the UI.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">iframe Navigation</div>
+        <div class="feature-desc">The TMS portal uses nested iframes (<code>i2ui_shell_content → navFrame / resultFrame</code>). Every interaction re-switches to the correct frame context to avoid stale element errors.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Popup Window Handling</div>
+        <div class="feature-desc">The export submit button lives in a new browser window. The driver switches to the popup via <code>window_handles</code>, clicks submit, then closes the popup and returns to the main window.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Download Path via Chrome Prefs</div>
+        <div class="feature-desc">Download directory is injected at launch via <code>add_experimental_option("prefs", {"download.default_directory": path})</code> — the only reliable method for forcing Chrome's save location when using chromedriver.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">Column Customization via JS</div>
+        <div class="feature-desc">The List Customization panel uses the site's own <code>tmuiduallistboxmoveit</code> function to move and reorder columns — replicated in JavaScript injected by the driver for full control over the final column layout.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-title">File Rotation</div>
+        <div class="feature-desc">Exports are saved as <code>TenderStatus_MMDDYYYY.xlsx</code>. On each run, the oldest files are pruned so the data folder never exceeds the configured limit. Same-day files are overwritten automatically.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error Handling -->
+  <section>
+    <p class="section-label">Error Handling</p>
+    <div class="errors">
+
+      <div class="error-card" style="border-left:4px solid #fc8181;">
+        <div class="error-title">Login Failure</div>
+        <div class="error-desc">Any exception during <code>__init__</code> propagates to the top-level <code>try/except</code>. The browser is always closed in <code>finally</code> — no dangling Chrome processes.</div>
+      </div>
+
+      <div class="error-card" style="border-left:4px solid #f6ad55;">
+        <div class="error-title">Export Timeout</div>
+        <div class="error-desc">File polling runs for up to 60 seconds per attempt. If no file is found, the attempt returns <code>None</code> and the pipeline retries up to 5 times before giving up.</div>
+      </div>
+
+      <div class="error-card" style="border-left:4px solid #68d391;">
+        <div class="error-title">SMTP Failure</div>
+        <div class="error-desc">Missing credentials or server errors are caught, logged with full traceback, and return <code>False</code>. The pipeline does not crash — email failure is non-fatal.</div>
+      </div>
+
+      <div class="error-card" style="border-left:4px solid #90cdf4;">
+        <div class="error-title">Stale Frame Context</div>
+        <div class="error-desc">Every method calls <code>switch_to_result()</code> or <code>switch_to_nav()</code> before interacting with elements — prevents stale context errors after page transitions.</div>
+      </div>
+
+      <div class="error-card" style="border-left:4px solid #b794f4;">
+        <div class="error-title">Same-Day Overwrite</div>
+        <div class="error-desc">If <code>TenderStatus_MMDDYYYY.xlsx</code> already exists, it is deleted before renaming the new export — prevents duplicate or locked-file errors on re-runs.</div>
+      </div>
+
+      <div class="error-card" style="border-left:4px solid #fbd38d;">
+        <div class="error-title">No Export File</div>
+        <div class="error-desc">If all 5 export attempts fail, <code>exported_file</code> remains <code>None</code> and the email block is skipped entirely. A warning is logged for visibility.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section>
+    <p class="section-label">Tech Stack</p>
+    <div class="tech-stack">
+      <div class="tech-pill">Python <span class="lang">core language</span></div>
+      <div class="tech-pill">Selenium <span class="lang">browser automation</span></div>
+      <div class="tech-pill">chromedriver <span class="lang">Chrome WebDriver</span></div>
+      <div class="tech-pill">pandas <span class="lang">Excel data handling</span></div>
+      <div class="tech-pill">openpyxl <span class="lang">xlsx formatting</span></div>
+      <div class="tech-pill">smtplib <span class="lang">email distribution</span></div>
+      <div class="tech-pill">python-dotenv <span class="lang">credential management</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Tender Status Review Automation Pipeline &nbsp;·&nbsp; Built with Python + Selenium
+</footer>
+
+</body>
+</html>
