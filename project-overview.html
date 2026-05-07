@@ -5,769 +5,804 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tender Status Review — Pipeline Overview</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:    #080b10;
+      --bg-page:    #0f1318;
+      --bg-card:    #1c2230;
+      --border:     #404858;
+      --border-hi:  #505a6e;
+      --text-1:     #e6edf3;
+      --text-2:     #c8d4e0;
+      --text-3:     #a0adb8;
+      --green:      #4ade80;
+      --blue:       #60a5fa;
+      --red:        #f87171;
+      --yellow:     #fbbf24;
+      --purple:     #a78bfa;
+      --orange:     #fb923c;
+    }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      background: #0f1318;
-      color: #e6edf3;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-1);
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    /* ── Header ── */
-    .hdr-dark {
-      background: #080b10;
-      border-bottom: 2px solid #404858;
-      padding: 22px 48px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
     }
+
+    @keyframes blink     { 50% { opacity: 0; } }
+    @keyframes fade-up   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fade-in   { from { opacity:0; } to { opacity:1; } }
+    @keyframes pulse-dot { 0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,.4); } 60% { box-shadow: 0 0 0 6px rgba(74,222,128,0); } }
+    @keyframes draw-path { from { stroke-dashoffset: var(--len); } to { stroke-dashoffset: 0; } }
+
+    .anim-fade-up { animation: fade-up .5s ease both; }
+    .d1 { animation-delay: .05s; }
+    .d2 { animation-delay: .12s; }
+    .d3 { animation-delay: .19s; }
+    .d4 { animation-delay: .26s; }
+    .d5 { animation-delay: .33s; }
+    .d6 { animation-delay: .40s; }
+
+    /* ── Header ── */
+    .hdr {
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      min-height: 72px;
+    }
+    .hdr::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--green) 20%, var(--blue) 60%, transparent);
+      opacity: 0.35;
+    }
+    .hdr-left { display: flex; flex-direction: column; justify-content: center; gap: 3px; }
     .hdr-prompt {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 600;
-      color: #4ade80;
-      display: block;
-      margin-bottom: 5px;
+      color: var(--green);
+      opacity: 0.8;
     }
     .hdr-title {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 700;
-      color: #f0f6fc;
+      color: var(--text-1);
       letter-spacing: -0.02em;
     }
-    .hdr-cursor {
-      color: #4ade80;
-      animation: blink 1.1s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
+    .hdr-cursor { color: var(--green); animation: blink 1.1s step-end infinite; }
     .hdr-sub {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 500;
-      color: #c8d4e0;
-      margin-top: 6px;
+      color: var(--text-3);
+      letter-spacing: 0.01em;
     }
-    .hdr-right { display: flex; align-items: center; gap: 8px; }
+    .hdr-right { display: flex; align-items: center; gap: 6px; }
     .hdr-pill {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      padding: 5px 12px;
+      font-size: 0.68rem;
       font-weight: 700;
+      padding: 5px 12px;
+      letter-spacing: 0.04em;
     }
-    .hdr-green { color: #4ade80; border: 1px solid #4ade8066; background: #4ade8018; }
-    .hdr-dim   { color: #c8d4e0; border: 1px solid #404858;   background: #1c2230; }
+    .pill-green { color: var(--green); border: 1px solid rgba(74,222,128,.3); background: rgba(74,222,128,.07); }
+    .pill-green .dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+      animation: pulse-dot 2s ease infinite;
+    }
+    .pill-dim { color: var(--text-2); border: 1px solid var(--border); background: var(--bg-card); }
 
     /* ── Tabs ── */
-    .tabs-dark {
-      background: #080b10;
-      border-bottom: 2px solid #404858;
-      padding: 0 32px;
+    .tabs-wrap {
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border);
+      padding: 0 40px;
       display: flex;
-      gap: 2px;
+      position: sticky;
+      top: 72px;
+      z-index: 99;
     }
-    .tabs-dark .tab {
-      color: #a0adb8;
+    .tab {
+      color: var(--text-3);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.83rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      padding: 16px 28px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 14px 24px;
       cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s, background .2s;
       user-select: none;
     }
-    .tabs-dark .tab:hover {
-      color: #e6edf3;
-      background: #0f1318;
-    }
-    .tabs-dark .tab.active {
-      color: #f0f6fc;
-      background: #1c2230;
-      border-bottom-color: #4ade80;
-    }
-    .tab-idx {
-      color: #4ade80;
-      margin-right: 10px;
-      font-size: 0.7rem;
-    }
+    .tab:hover { color: var(--text-1); background: rgba(255,255,255,.02); }
+    .tab.active { color: var(--text-1); border-bottom-color: var(--green); background: rgba(74,222,128,.04); }
+    .tab-num { color: var(--green); margin-right: 9px; font-size: 0.65rem; opacity: .7; }
+    .tab.active .tab-num { opacity: 1; }
 
     /* ── Pages ── */
-    .page { display: none; background: #0f1318; min-height: calc(100vh - 124px); }
+    .page { display: none; background: var(--bg-page); }
     .page.active { display: block; }
-    .page-inner { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+    .page-inner { max-width: 1100px; margin: 0 auto; padding: 40px 28px 60px; }
 
-    /* ── Section labels ── */
-    .dk-label {
+    .sec-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 700;
-      color: #4ade80;
-      margin-bottom: 16px;
-      letter-spacing: 0.06em;
+      color: var(--green);
+      letter-spacing: 0.1em;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .dk-section { margin-bottom: 48px; }
+    .sec-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+      max-width: 180px;
+    }
+    .sec { margin-bottom: 52px; }
 
     /* ── Metrics ── */
-    .dk-metrics {
+    .metrics-row {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+      gap: 10px;
     }
-    .dk-metric {
-      background: #1c2230;
-      border: 1px solid #404858;
-      border-top: 2px solid #4ade8055;
-      padding: 20px 18px;
+    .metric {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 2px solid transparent;
+      padding: 20px 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, transform .2s;
     }
-    .dk-metric-val {
+    .metric::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(96,165,250,.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .metric:hover { transform: translateY(-2px); border-color: var(--border-hi); }
+    .metric.m-blue   { border-top-color: var(--blue); }
+    .metric.m-green  { border-top-color: var(--green); }
+    .metric.m-red    { border-top-color: var(--red); }
+    .metric.m-yellow { border-top-color: var(--yellow); }
+    .metric.m-purple { border-top-color: var(--purple); }
+    .metric-val {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.9rem;
+      font-size: 2rem;
       font-weight: 700;
-      color: #60a5fa;
       line-height: 1;
     }
-    .dk-metric-key {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.66rem;
-      font-weight: 600;
-      color: #c8d4e0;
-      margin-top: 9px;
-    }
-    .dk-metric-sub {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.68rem;
-      font-weight: 500;
-      color: #c8d4e0;
-      margin-top: 4px;
-    }
-
-    /* ── Regions ── */
-    .dk-regions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .dk-region {
-      background: #1c2230;
-      border: 1px solid #404858;
-      border-top: 2px solid #60a5fa55;
-      padding: 20px;
-    }
-    .dk-region-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #60a5fa;
-      margin-bottom: 10px;
-    }
-    .dk-region-desc {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.74rem;
-      font-weight: 500;
-      color: #c8d4e0;
-      line-height: 1.65;
-    }
-    .dk-region-desc code {
-      font-family: 'JetBrains Mono', monospace;
-      background: #080b10;
-      color: #f87171;
-      padding: 1px 6px;
-      font-size: 0.68rem;
-      border: 1px solid #404858;
-    }
-    .dk-grp-row { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
-    .dk-grp {
+    .m-blue .metric-val   { color: var(--blue); }
+    .m-green .metric-val  { color: var(--green); }
+    .m-red .metric-val    { color: var(--red); }
+    .m-yellow .metric-val { color: var(--yellow); }
+    .m-purple .metric-val { color: var(--purple); }
+    .metric-key {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.62rem;
       font-weight: 700;
-      color: #4ade80;
-      background: #4ade8018;
-      border: 1px solid #4ade8044;
+      color: var(--text-3);
+      margin-top: 10px;
+      letter-spacing: 0.04em;
+    }
+    .metric-sub { font-size: 0.67rem; font-weight: 500; color: var(--text-2); margin-top: 3px; }
+
+    /* ── Regions ── */
+    .regions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .region-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--blue);
+      padding: 20px;
+      transition: transform .2s, border-color .2s;
+    }
+    .region-card:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.5); }
+    .region-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+    .region-desc {
+      font-size: 0.73rem;
+      font-weight: 500;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+    .region-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-deep);
+      color: var(--red);
+      padding: 1px 6px;
+      font-size: 0.67rem;
+      border: 1px solid var(--border);
+    }
+    .grp-row { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .grp-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: var(--green);
+      background: rgba(74,222,128,.08);
+      border: 1px solid rgba(74,222,128,.3);
       padding: 2px 8px;
     }
 
     /* ── Feature cards ── */
-    .dk-features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .dk-feat {
-      background: #1c2230;
-      border: 1px solid #404858;
-      border-left: 3px solid #60a5fa;
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .feat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
       padding: 20px;
+      transition: transform .2s, border-color .2s;
     }
-    .dk-feat-tag {
+    .feat-card:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.6); }
+    .feat-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 700;
-      color: #60a5fa;
+      color: var(--blue);
       letter-spacing: 0.14em;
       margin-bottom: 8px;
     }
-    .dk-feat-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #f0f6fc;
-      margin-bottom: 8px;
-    }
-    .dk-feat-desc {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.74rem;
-      font-weight: 500;
-      color: #c8d4e0;
-      line-height: 1.65;
-    }
-    .dk-feat-desc code {
+    .feat-title { font-size: 0.84rem; font-weight: 700; color: var(--text-1); margin-bottom: 8px; }
+    .feat-desc { font-size: 0.73rem; font-weight: 500; color: var(--text-2); line-height: 1.7; }
+    .feat-desc code {
       font-family: 'JetBrains Mono', monospace;
-      background: #080b10;
-      color: #f87171;
+      background: var(--bg-deep);
+      color: var(--red);
       padding: 1px 6px;
-      font-size: 0.68rem;
-      border: 1px solid #404858;
-    }
-    .kw {
-      color: #2b6cb0;
-      font-weight: 600;
+      font-size: 0.67rem;
+      border: 1px solid var(--border);
     }
 
     /* ── Dependencies ── */
-    .dk-stack {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .dk-dep {
-      background: #1c2230;
-      border: 1px solid #404858;
-      padding: 8px 16px;
+    .dep-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dep {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 15px;
       display: flex;
       align-items: center;
       gap: 10px;
-      transition: border-color 0.15s;
+      transition: border-color .15s;
+      cursor: default;
     }
-    .dk-dep:hover { border-color: #4ade8055; }
-    .dk-dep-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.73rem;
-      font-weight: 700;
-      color: #e6edf3;
-    }
-    .dk-dep-role {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.65rem;
-      font-weight: 500;
-      color: #c8d4e0;
-    }
+    .dep:hover { border-color: var(--border-hi); }
+    .dep-name { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700; color: var(--text-1); }
+    .dep-role { font-size: 0.63rem; font-weight: 600; color: var(--text-3); }
 
-    /* ── Flowchart (Page 2) ── */
-    .dk-flowchart {
-      background: #1c2230;
-      border: 1px solid #404858;
-      padding: 36px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .fc-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 13px 20px;
-      min-width: 130px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      line-height: 1.4;
-      font-family: 'Inter', sans-serif;
-    }
-    .fc-box.start {
-      background: #0d1e33; border: 1.5px solid #60a5fa77; color: #93c5fd;
-    }
-    .fc-box.process {
-      background: #1a2030; border: 1.5px solid #505a6e; color: #e6edf3;
-    }
-    .fc-box.decision {
-      background: #1e1a08; border: 1.5px solid #ca8a0477; color: #fbbf24;
-      min-width: 148px;
-    }
-    .fc-box.end-success {
-      background: #0a1f12; border: 1.5px solid #4ade8077; color: #4ade80;
-      min-width: 130px;
-    }
-    .fc-box.end-alert {
-      background: #1f0d0d; border: 1.5px solid #f8717177; color: #f87171;
-      min-width: 130px;
-    }
-    .fc-label {
-      font-size: 0.64rem;
-      font-weight: 500;
-      color: #a0adb8;
-      margin-top: 4px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .fc-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-    .fc-arrow-down {
-      width: 2px; height: 28px;
-      background: #505a6e;
-      margin: 0 auto; position: relative;
-    }
-    .fc-arrow-down::after {
-      content: ''; position: absolute; bottom: -5px; left: 50%;
-      transform: translateX(-50%);
-      border-left: 5px solid transparent; border-right: 5px solid transparent;
-      border-top: 6px solid #505a6e;
-    }
-    .fc-arrow-right {
-      width: 40px; height: 2px; background: #505a6e; position: relative; flex-shrink: 0;
-    }
-    .fc-arrow-right::after {
-      content: ''; position: absolute; right: -5px; top: 50%;
-      transform: translateY(-50%);
-      border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-      border-left: 6px solid #505a6e;
-    }
-    .fc-arrow-left {
-      width: 40px; height: 2px; background: #505a6e; position: relative; flex-shrink: 0;
-    }
-    .fc-arrow-left::after {
-      content: ''; position: absolute; left: -5px; top: 50%;
-      transform: translateY(-50%);
-      border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-      border-right: 6px solid #505a6e;
-    }
-    .fc-branch-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: #c8d4e0;
-      margin: 0 6px;
-      white-space: nowrap;
-    }
-
-    /* ── Error cards (Page 2) ── */
-    .error-grid { display: grid; grid-template-columns: repeat(3,1fr); gap:12px; }
-    .error-card {
-      background: #1c2230;
-      border: 1px solid #404858;
-      padding: 20px;
-    }
-    .error-card-title {
-      font-size: 0.84rem;
-      font-weight: 700;
-      color: #f0f6fc;
-      margin-bottom: 8px;
-      font-family: 'Inter', sans-serif;
-    }
-    .error-card-desc {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #c8d4e0;
-      line-height: 1.65;
-      font-family: 'Inter', sans-serif;
-    }
-    .error-card-desc code {
-      font-family: 'JetBrains Mono', monospace;
-      background: #080b10;
-      color: #f87171;
-      padding: 1px 6px;
-      font-size: 0.68rem;
-      border: 1px solid #404858;
-    }
-
-    /* ── Code cards (Page 3) ── */
-    .code-split {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    .code-card {
-      background: #080b10;
-      border: 1px solid #404858;
+    /* ── Flowchart (SVG) ── */
+    .flowchart-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px 16px;
       overflow: hidden;
+      position: relative;
     }
-    .code-card-header {
-      padding: 11px 16px;
+    .fc-svg-container {
+      width: 100%;
+      cursor: zoom-in;
+      transition: transform .35s cubic-bezier(.25,.46,.45,.94);
+    }
+    .fc-svg-container.zoomed { transform: scale(1.4); cursor: zoom-out; }
+    #fc-svg { display: block; width: 100%; height: auto; }
+    .fc-zoom-hint {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      color: var(--text-3);
+      margin-top: 10px;
+      letter-spacing: 0.06em;
+    }
+
+    .fc-node-start    { fill: #0d1e33; stroke: rgba(96,165,250,.55);  stroke-width: 1.5; }
+    .fc-node-process  { fill: #131c28; stroke: #505a6e;               stroke-width: 1.5; }
+    .fc-node-decision { fill: #1e1a08; stroke: rgba(202,138,4,.55);   stroke-width: 1.5; }
+    .fc-node-ok       { fill: #0a1f12; stroke: rgba(74,222,128,.55);  stroke-width: 1.5; }
+    .fc-node-err      { fill: #1f0d0d; stroke: rgba(248,113,113,.55); stroke-width: 1.5; }
+
+    .fc-t-main  { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12.5px; fill: #e6edf3; }
+    .fc-t-main.start  { fill: #93c5fd; }
+    .fc-t-main.ok     { fill: #4ade80; }
+    .fc-t-main.err    { fill: #f87171; }
+    .fc-t-main.decide { fill: #fbbf24; }
+    .fc-t-sub   { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 9.5px; fill: #a0adb8; }
+
+    .fc-edge { fill: none; stroke: #505a6e; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .fc-edge-yes { stroke: rgba(74,222,128,.7); }
+    .fc-edge-no  { stroke: rgba(248,113,113,.7); }
+    .fc-edge.animated { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); }
+    .fc-edge.animated.run { animation: draw-path .6s ease forwards; }
+    .fc-label-yes { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9px; fill: #4ade80; }
+    .fc-label-no  { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 9px; fill: #f87171; }
+
+    /* ── Error grid ── */
+    .err-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .err-card { background: var(--bg-card); border: 1px solid var(--border); padding: 18px 20px; }
+    .err-title { font-size: 0.83rem; font-weight: 700; color: var(--text-1); margin-bottom: 8px; }
+    .err-desc { font-size: 0.73rem; font-weight: 500; color: var(--text-2); line-height: 1.65; }
+    .err-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-deep);
+      color: var(--red);
+      padding: 1px 6px;
+      font-size: 0.67rem;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Code cards ── */
+    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .code-card { background: #07090e; border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .code-card:hover { border-color: var(--border-hi); }
+    .code-card-hdr {
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #404858;
-      background: #1c2230;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
     }
-    .code-card-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.74rem;
-      font-weight: 600;
-      color: #e6edf3;
-    }
+    .code-card-title { font-size: 0.72rem; font-weight: 700; color: var(--text-1); }
     .code-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.63rem;
-      padding: 2px 9px;
+      font-size: 0.62rem;
       font-weight: 700;
+      padding: 2px 9px;
+      background: rgba(74,222,128,.08);
+      color: var(--green);
+      border: 1px solid rgba(74,222,128,.3);
     }
-    .code-tag.after { background: #0e2a1a; color: #4ade80; border: 1px solid #4ade8055; }
     pre {
       padding: 16px;
-      font-size: 0.73rem;
-      line-height: 1.75;
-      color: #e6edf3;
-      overflow-x: auto;
-      font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-    }
-    .hl-keyword { color: #f472b6; font-weight: 600; }
-    .hl-var     { color: #60a5fa; }
-    .hl-string  { color: #86efac; }
-    .hl-comment { color: #6e7681; font-style: italic; }
-    .hl-num     { color: #fb923c; }
-
-    /* ── Convo cards (Page 3) ── */
-    .convo-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    .convo-card {
-      background: #1c2230;
-      border: 1px solid #404858;
-      overflow: hidden;
-    }
-    .convo-header {
-      padding: 13px 18px;
-      background: #080b10;
-      border-bottom: 1px solid #404858;
-      font-family: 'JetBrains Mono', monospace;
       font-size: 0.72rem;
+      line-height: 1.78;
+      color: var(--text-1);
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+      font-weight: 500;
+    }
+    .kw  { color: #f472b6; font-weight: 700; }
+    .vr  { color: var(--blue); }
+    .st  { color: #86efac; }
+    .cm  { color: #4d5a6a; font-style: italic; }
+    .nm  { color: var(--orange); }
+
+    .code-card pre .char { transition: none; }
+    .type-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--green);
+      vertical-align: text-bottom;
+      margin-left: 1px;
+      animation: blink .9s step-end infinite;
+    }
+
+    /* ── Convo cards ── */
+    .convo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .convo-card { background: var(--bg-card); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .convo-card:hover { border-color: var(--border-hi); }
+    .convo-hdr {
+      padding: 11px 18px;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
       font-weight: 700;
-      color: #60a5fa;
+      color: var(--blue);
       letter-spacing: 0.03em;
     }
-    .convo-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { display: flex; gap: 10px; align-items: flex-start; }
-    .msg-avatar {
-      width: 28px; height: 28px;
-      font-size: 0.63rem;
+    .convo-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { display: flex; gap: 10px; align-items: flex-start; opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+    .msg.visible { opacity: 1; transform: translateY(0); }
+    .avatar {
+      width: 26px; height: 26px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
       font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
       margin-top: 1px;
-      font-family: 'JetBrains Mono', monospace;
     }
-    .msg-avatar.user   { background: #0d1e33; color: #60a5fa; border: 1px solid #60a5fa55; }
-    .msg-avatar.claude { background: #1e1a08; color: #fbbf24; border: 1px solid #fbbf2455; }
-    .msg-bubble {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.78rem;
+    .avatar-u { background: rgba(96,165,250,.12); color: var(--blue); border: 1px solid rgba(96,165,250,.35); }
+    .avatar-c { background: rgba(251,191,36,.1); color: var(--yellow); border: 1px solid rgba(251,191,36,.3); }
+    .bubble {
+      font-size: 0.76rem;
       font-weight: 500;
       line-height: 1.65;
-      color: #e6edf3;
-      background: #0f1318;
-      border: 1px solid #404858;
-      padding: 9px 13px;
+      color: var(--text-1);
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
       flex: 1;
     }
-    .msg-bubble.claude-bubble { background: #13110a; border-color: #fbbf2433; }
-    .msg-bubble code {
+    .bubble-c { background: #100f09; border-color: rgba(251,191,36,.2); }
+    .bubble code {
       font-family: 'JetBrains Mono', monospace;
-      background: #080b10;
-      color: #f87171;
-      padding: 1px 6px;
-      font-size: 0.68rem;
-      border: 1px solid #404858;
+      background: var(--bg-deep);
+      color: var(--red);
+      padding: 1px 5px;
+      font-size: 0.66rem;
+      border: 1px solid var(--border);
     }
 
     /* ── Footer ── */
     footer {
       text-align: center;
-      padding: 22px;
+      padding: 20px 24px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: #a0adb8;
-      border-top: 1px solid #404858;
-      background: #080b10;
+      font-size: 0.67rem;
+      font-weight: 600;
+      color: var(--text-3);
+      border-top: 1px solid var(--border);
+      background: var(--bg-deep);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hdr { padding: 0 20px; min-height: 60px; }
+      .hdr-prompt { display: none; }
+      .hdr-title { font-size: 0.95rem; }
+      .hdr-sub { font-size: 0.62rem; }
+      .hdr-pill { font-size: 0.62rem; padding: 4px 9px; }
+      .tabs-wrap { top: 60px; padding: 0 12px; }
+      .tab { font-size: 0.7rem; padding: 12px 14px; }
+      .page-inner { padding: 24px 16px 48px; }
+      .sec { margin-bottom: 36px; }
+      .metrics-row { grid-template-columns: repeat(3, 1fr); }
+      .regions-grid { grid-template-columns: 1fr; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .err-grid  { grid-template-columns: 1fr; }
+      .code-grid  { grid-template-columns: 1fr; }
+      .convo-grid { grid-template-columns: 1fr; }
+      pre { font-size: 0.66rem; }
+    }
+    @media (max-width: 480px) {
+      .metrics-row { grid-template-columns: repeat(2, 1fr); }
+      .metric:last-child { grid-column: span 2; }
+      .hdr-right .pill-dim:first-of-type { display: none; }
     }
   </style>
 </head>
 <body>
 
-<header class="hdr-dark">
+<header class="hdr">
   <div class="hdr-left">
     <span class="hdr-prompt">~/projects/tender-status-review</span>
     <h1 class="hdr-title">tender_status_review<span class="hdr-cursor">_</span></h1>
     <p class="hdr-sub">TMS crawl, export &amp; email distribution of daily tender status &nbsp;·&nbsp; Python &nbsp;·&nbsp; Selenium → XLSX → SMTP</p>
   </div>
   <div class="hdr-right">
-    <span class="hdr-pill hdr-green">● ACTIVE</span>
-    <span class="hdr-pill hdr-dim">3 regions/day</span>
-    <span class="hdr-pill hdr-dim">v1.0</span>
+    <span class="hdr-pill pill-green"><span class="dot"></span>ACTIVE</span>
+    <span class="hdr-pill pill-dim">3 regions/day</span>
+    <span class="hdr-pill pill-dim">v1.0</span>
   </div>
 </header>
 
-<!-- Tabs -->
-<div class="tabs-dark">
-  <div class="tab active" onclick="switchTab(0)"><span class="tab-idx">01</span> Overview</div>
-  <div class="tab" onclick="switchTab(1)"><span class="tab-idx">02</span> Pipeline Flow</div>
-  <div class="tab" onclick="switchTab(2)"><span class="tab-idx">03</span> Code &amp; Highlights</div>
+<div class="tabs-wrap">
+  <div class="tab active" onclick="switchTab(0)"><span class="tab-num">01</span>Overview</div>
+  <div class="tab" onclick="switchTab(1)"><span class="tab-num">02</span>Pipeline Flow</div>
+  <div class="tab" onclick="switchTab(2)"><span class="tab-num">03</span>Code &amp; Highlights</div>
 </div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      PAGE 1 — OVERVIEW
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div class="page active" id="page-0">
   <div class="page-inner">
 
-    <div class="dk-section">
-      <p class="dk-label">// system_metrics</p>
-      <div class="dk-metrics">
-        <div class="dk-metric">
-          <div class="dk-metric-val">3</div>
-          <div class="dk-metric-key">regional_runs</div>
-          <div class="dk-metric-sub">per day</div>
+    <div class="sec">
+      <p class="sec-label">// system_metrics</p>
+      <div class="metrics-row">
+        <div class="metric m-blue anim-fade-up d1">
+          <div class="metric-val">3</div>
+          <div class="metric-key">regional_runs</div>
+          <div class="metric-sub">per day</div>
         </div>
-        <div class="dk-metric">
-          <div class="dk-metric-val">2</div>
-          <div class="dk-metric-key">carriers_tracked</div>
-          <div class="dk-metric-sub">per region</div>
+        <div class="metric m-green anim-fade-up d2">
+          <div class="metric-val">2</div>
+          <div class="metric-key">carriers_tracked</div>
+          <div class="metric-sub">per region</div>
         </div>
-        <div class="dk-metric">
-          <div class="dk-metric-val">5</div>
-          <div class="dk-metric-key">tender_statuses</div>
-          <div class="dk-metric-sub">monitored</div>
+        <div class="metric m-red anim-fade-up d3">
+          <div class="metric-val">5</div>
+          <div class="metric-key">tender_statuses</div>
+          <div class="metric-sub">monitored</div>
         </div>
-        <div class="dk-metric">
-          <div class="dk-metric-val">0</div>
-          <div class="dk-metric-key">manual_steps</div>
-          <div class="dk-metric-sub">fully automated</div>
+        <div class="metric m-yellow anim-fade-up d4">
+          <div class="metric-val">0</div>
+          <div class="metric-key">manual_steps</div>
+          <div class="metric-sub">fully automated</div>
         </div>
-        <div class="dk-metric">
-          <div class="dk-metric-val">5×</div>
-          <div class="dk-metric-key">export_retries</div>
-          <div class="dk-metric-sub">on failure</div>
+        <div class="metric m-purple anim-fade-up d5">
+          <div class="metric-val">5×</div>
+          <div class="metric-key">export_retries</div>
+          <div class="metric-sub">on failure</div>
         </div>
       </div>
     </div>
 
-    <div class="dk-section">
-      <p class="dk-label">// regional_runs</p>
-      <div class="dk-regions">
-        <div class="dk-region">
-          <div class="dk-region-title">East Coast</div>
-          <div class="dk-region-desc">
+    <div class="sec">
+      <p class="sec-label">// regional_runs</p>
+      <div class="regions-grid">
+        <div class="region-card anim-fade-up d1">
+          <div class="region-title">East Coast</div>
+          <div class="region-desc">
             <code>run_east_coast.bat</code> → <code>python main.py east_coast</code><br><br>
             Output: <code>Report_East_mmddyyyy.xlsx</code>
           </div>
-          <div class="dk-grp-row">
-            <span class="dk-grp">GRP1</span><span class="dk-grp">GRP2</span><span class="dk-grp">GRP3</span>
+          <div class="grp-row">
+            <span class="grp-badge">GRP1</span><span class="grp-badge">GRP2</span><span class="grp-badge">GRP3</span>
           </div>
         </div>
-        <div class="dk-region">
-          <div class="dk-region-title">Central</div>
-          <div class="dk-region-desc">
+        <div class="region-card anim-fade-up d2">
+          <div class="region-title">Central</div>
+          <div class="region-desc">
             <code>run_central.bat</code> → <code>python main.py central</code><br><br>
             Output: <code>Report_Central_mmddyyyy.xlsx</code>
           </div>
-          <div class="dk-grp-row">
-            <span class="dk-grp">GRP4</span><span class="dk-grp">GRP5</span>
+          <div class="grp-row">
+            <span class="grp-badge">GRP4</span><span class="grp-badge">GRP5</span>
           </div>
         </div>
-        <div class="dk-region">
-          <div class="dk-region-title">West Coast</div>
-          <div class="dk-region-desc">
+        <div class="region-card anim-fade-up d3">
+          <div class="region-title">West Coast</div>
+          <div class="region-desc">
             <code>run_west_coast.bat</code> → <code>python main.py west_coast</code><br><br>
             Output: <code>Report_West_mmddyyyy.xlsx</code>
           </div>
-          <div class="dk-grp-row">
-            <span class="dk-grp">GRP6</span>
+          <div class="grp-row">
+            <span class="grp-badge">GRP6</span>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="dk-section">
-      <p class="dk-label">// technical_highlights</p>
-      <div class="dk-features">
-        <div class="dk-feat">
-          <div class="dk-feat-tag">AUTOMATION</div>
-          <div class="dk-feat-title">Hidden Selects via JavaScript</div>
-          <div class="dk-feat-desc">Status and logistics group dropdowns are hidden <code>&lt;select&gt;</code> elements. Values set via <code>execute_script</code> + site's own <span class="kw"><code>showSelected()</code></span> to sync the UI — Selenium click alone cannot reach them.</div>
+    <div class="sec">
+      <p class="sec-label">// technical_highlights</p>
+      <div class="feat-grid">
+        <div class="feat-card anim-fade-up d1">
+          <div class="feat-tag">AUTOMATION</div>
+          <div class="feat-title">Hidden Selects via JavaScript</div>
+          <div class="feat-desc">Status and logistics group dropdowns are hidden <code>&lt;select&gt;</code> elements. Values set via <code>execute_script</code> + site's own <code>showSelected()</code> to sync the UI — Selenium click alone cannot reach them.</div>
         </div>
-        <div class="dk-feat">
-          <div class="dk-feat-tag">NAVIGATION</div>
-          <div class="dk-feat-title">Nested iframe Re-entry</div>
-          <div class="dk-feat-desc">Portal wraps content in <span class="kw">nested iframes</span>. Frame context re-established before every interaction via <code>switch_to_result()</code> / <code>switch_to_nav()</code> to prevent stale element errors.</div>
+        <div class="feat-card anim-fade-up d2">
+          <div class="feat-tag">NAVIGATION</div>
+          <div class="feat-title">Nested iframe Re-entry</div>
+          <div class="feat-desc">Portal wraps content in nested iframes. Frame context re-established before every interaction via <code>switch_to_result()</code> / <code>switch_to_nav()</code> to prevent stale element errors.</div>
         </div>
-        <div class="dk-feat">
-          <div class="dk-feat-tag">EXPORT</div>
-          <div class="dk-feat-title">Popup Window Handling</div>
-          <div class="dk-feat-desc">Export submit opens a new browser window. Driver switches via <span class="kw"><code>window_handles</code></span>, submits, polls disk for the file, closes popup, returns to main — all without user interaction.</div>
+        <div class="feat-card anim-fade-up d3">
+          <div class="feat-tag">EXPORT</div>
+          <div class="feat-title">Popup Window Handling</div>
+          <div class="feat-desc">Export submit opens a new browser window. Driver switches via <code>window_handles</code>, submits, polls disk for the file, closes popup, returns to main — all without user interaction.</div>
         </div>
-        <div class="dk-feat">
-          <div class="dk-feat-tag">DISPATCH</div>
-          <div class="dk-feat-title">Multi-Region via sys.argv</div>
-          <div class="dk-feat-desc">One <code>main.py</code>, three bat files. Each passes a run key; the <code>RUNS</code> dict maps it to logistics groups, region label, and output filename.</div>
+        <div class="feat-card anim-fade-up d4">
+          <div class="feat-tag">DISPATCH</div>
+          <div class="feat-title">Multi-Region via sys.argv</div>
+          <div class="feat-desc">One <code>main.py</code>, three bat files. Each passes a run key; the <code>RUNS</code> dict maps it to logistics groups, region label, and output filename.</div>
         </div>
-        <div class="dk-feat">
-          <div class="dk-feat-tag">COLUMN</div>
-          <div class="dk-feat-title">Dual-Listbox API Injection</div>
-          <div class="dk-feat-desc">Column customization calls the site's own <span class="kw"><code>tmuiduallistboxmoveit</code></span> function via <code>execute_script</code> — columns moved, filtered, and reordered to match the required layout.</div>
+        <div class="feat-card anim-fade-up d5">
+          <div class="feat-tag">COLUMN</div>
+          <div class="feat-title">Dual-Listbox API Injection</div>
+          <div class="feat-desc">Column customization calls the site's own <code>tmuiduallistboxmoveit</code> function via <code>execute_script</code> — columns moved, filtered, and reordered to match the required layout.</div>
         </div>
-        <div class="dk-feat">
-          <div class="dk-feat-tag">EMAIL</div>
-          <div class="dk-feat-title">HTML Summary in Body</div>
-          <div class="dk-feat-desc">Only Load ID and Status columns extracted and rendered as inline HTML table. Recipients see the summary without opening the attachment.</div>
+        <div class="feat-card anim-fade-up d6">
+          <div class="feat-tag">EMAIL</div>
+          <div class="feat-title">HTML Summary in Body</div>
+          <div class="feat-desc">Only Load ID and Status columns extracted and rendered as inline HTML table. Recipients see the summary without opening the attachment.</div>
         </div>
       </div>
     </div>
 
-    <div class="dk-section">
-      <p class="dk-label">// dependencies</p>
-      <div class="dk-stack">
-        <div class="dk-dep"><span class="dk-dep-name">python</span><span class="dk-dep-role">runtime</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">selenium</span><span class="dk-dep-role">browser automation</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">chromedriver</span><span class="dk-dep-role">Chrome WebDriver</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">pandas</span><span class="dk-dep-role">Excel data handling</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">openpyxl</span><span class="dk-dep-role">xlsx formatting</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">smtplib</span><span class="dk-dep-role">smtp outbound</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">python-dotenv</span><span class="dk-dep-role">credentials</span></div>
-        <div class="dk-dep"><span class="dk-dep-name">claude-code</span><span class="dk-dep-role">AI dev</span></div>
+    <div class="sec">
+      <p class="sec-label">// dependencies</p>
+      <div class="dep-grid">
+        <div class="dep"><span class="dep-name">python</span><span class="dep-role">runtime</span></div>
+        <div class="dep"><span class="dep-name">selenium</span><span class="dep-role">browser automation</span></div>
+        <div class="dep"><span class="dep-name">chromedriver</span><span class="dep-role">Chrome WebDriver</span></div>
+        <div class="dep"><span class="dep-name">pandas</span><span class="dep-role">Excel data handling</span></div>
+        <div class="dep"><span class="dep-name">openpyxl</span><span class="dep-role">xlsx formatting</span></div>
+        <div class="dep"><span class="dep-name">smtplib</span><span class="dep-role">smtp outbound</span></div>
+        <div class="dep"><span class="dep-name">python-dotenv</span><span class="dep-role">credentials</span></div>
+        <div class="dep"><span class="dep-name">claude-code</span><span class="dep-role">AI dev</span></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      PAGE 2 — PIPELINE FLOW
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div class="page" id="page-1">
   <div class="page-inner">
 
-    <div class="dk-section">
-      <p class="dk-label">// execution_flow</p>
-      <div class="dk-flowchart">
+    <div class="sec">
+      <p class="sec-label">// execution_flow</p>
+      <div class="flowchart-wrap">
+        <div class="fc-svg-container">
+        <svg id="fc-svg" viewBox="0 0 860 790">
+          <defs>
+            <marker id="arr"     markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L7,3.5 z" fill="#505a6e"/>
+            </marker>
+            <marker id="arr-yes" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L7,3.5 z" fill="rgba(74,222,128,.85)"/>
+            </marker>
+            <marker id="arr-no"  markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+              <path d="M0,0.5 L0,6.5 L7,3.5 z" fill="rgba(248,113,113,.85)"/>
+            </marker>
+          </defs>
 
-        <div class="fc-box start">Task Scheduler<span class="fc-label">bat file trigger</span></div>
-        <div class="fc-arrow-down"></div>
+          <!-- ══ EDGES ══ -->
+          <line class="fc-edge animated" x1="430" y1="58"  x2="430" y2="86"  marker-end="url(#arr)"/>
+          <line class="fc-edge animated" x1="430" y1="138" x2="430" y2="168" marker-end="url(#arr)"/>
+          <line class="fc-edge animated" x1="430" y1="220" x2="430" y2="250" marker-end="url(#arr)"/>
+          <line class="fc-edge animated" x1="430" y1="302" x2="430" y2="332" marker-end="url(#arr)"/>
+          <line class="fc-edge animated" x1="430" y1="384" x2="430" y2="414" marker-end="url(#arr)"/>
+          <line class="fc-edge animated" x1="430" y1="496" x2="430" y2="506" marker-end="url(#arr)"/>
 
-        <div class="fc-box process">
-          sys.argv run key
-          <span class="fc-label">east_coast / central / west_coast</span>
+          <!-- Decision: No branch (left → Failure Alert) -->
+          <path class="fc-edge fc-edge-no animated"
+                d="M 402,532 H 155 V 578" marker-end="url(#arr-no)"/>
+          <!-- Decision: Yes branch (right → Format xlsx) -->
+          <path class="fc-edge fc-edge-yes animated"
+                d="M 458,532 H 650 V 578" marker-end="url(#arr-yes)"/>
+
+          <!-- Right branch: Format → HTML → Send -->
+          <line class="fc-edge fc-edge-yes animated" x1="650" y1="630" x2="650" y2="660" marker-end="url(#arr-yes)"/>
+          <line class="fc-edge fc-edge-yes animated" x1="650" y1="712" x2="650" y2="730" marker-end="url(#arr-yes)"/>
+
+          <!-- ══ NODES ══ -->
+
+          <!-- Task Scheduler -->
+          <rect class="fc-node-start" x="290" y="14" width="280" height="44" rx="4"/>
+          <text class="fc-t-main start" x="430" y="31" text-anchor="middle" dominant-baseline="middle" dy="5">Task Scheduler</text>
+          <text class="fc-t-sub"        x="430" y="49" text-anchor="middle">bat file trigger</text>
+
+          <!-- sys.argv run key -->
+          <rect class="fc-node-process" x="290" y="86" width="280" height="52" rx="0"/>
+          <text class="fc-t-main" x="430" y="107" text-anchor="middle">sys.argv run key</text>
+          <text class="fc-t-sub"  x="430" y="124" text-anchor="middle">east_coast / central / west_coast</text>
+
+          <!-- Launch Chrome + Login -->
+          <rect class="fc-node-process" x="290" y="168" width="280" height="52" rx="0"/>
+          <text class="fc-t-main" x="430" y="189" text-anchor="middle">Launch Chrome + Login</text>
+          <text class="fc-t-sub"  x="430" y="206" text-anchor="middle">download.default_directory pref set</text>
+
+          <!-- Navigate -->
+          <rect class="fc-node-process" x="290" y="250" width="280" height="52" rx="0"/>
+          <text class="fc-t-main" x="430" y="271" text-anchor="middle">Navigate → Tender Requests</text>
+          <text class="fc-t-sub"  x="430" y="288" text-anchor="middle">iframe re-entry · nav frame</text>
+
+          <!-- Set Search Conditions -->
+          <rect class="fc-node-process" x="290" y="332" width="280" height="52" rx="0"/>
+          <text class="fc-t-main" x="430" y="353" text-anchor="middle">Set Search Conditions</text>
+          <text class="fc-t-sub"  x="430" y="370" text-anchor="middle">carrier · status (JS) · group (JS) · date=TODAY</text>
+
+          <!-- Customize Columns -->
+          <rect class="fc-node-process" x="290" y="414" width="280" height="52" rx="0"/>
+          <text class="fc-t-main" x="430" y="435" text-anchor="middle">Customize Columns</text>
+          <text class="fc-t-sub"  x="430" y="452" text-anchor="middle">tmuiduallistboxmoveit · reorder</text>
+
+          <!-- Export Data → Popup -->
+          <rect class="fc-node-process" x="290" y="466" width="280" height="30" rx="0"/>
+          <text class="fc-t-main" x="430" y="476" text-anchor="middle" dominant-baseline="middle">Export → Popup · poll disk</text>
+
+          <!-- edge: Export node → Diamond -->
+          <!-- (covered by the main spine line x1=430 y1=466 → 496 which is already defined above) -->
+
+          <!-- DIAMOND: File downloaded? center (430, 532) -->
+          <polygon class="fc-node-decision" points="430,506 510,532 430,558 350,532"/>
+          <text class="fc-t-main decide" x="430" y="527" text-anchor="middle">File</text>
+          <text class="fc-t-main decide" x="430" y="541" text-anchor="middle">downloaded?</text>
+          <text class="fc-label-no"  x="286" y="526" text-anchor="middle">No (retry×5)</text>
+          <text class="fc-label-yes" x="574" y="526" text-anchor="middle">Yes</text>
+
+          <!-- Failure Alert -->
+          <rect class="fc-node-err" x="68" y="578" width="174" height="52" rx="0"/>
+          <text class="fc-t-main err" x="155" y="599" text-anchor="middle">Failure Alert</text>
+          <text class="fc-t-sub"     x="155" y="616" text-anchor="middle">separate recipients</text>
+
+          <!-- Format xlsx -->
+          <rect class="fc-node-process" x="550" y="578" width="200" height="52" rx="0"/>
+          <text class="fc-t-main" x="650" y="599" text-anchor="middle">Format xlsx</text>
+          <text class="fc-t-sub"  x="650" y="616" text-anchor="middle">col auto-fit · auto filter</text>
+
+          <!-- Build HTML Email Body -->
+          <rect class="fc-node-process" x="550" y="660" width="200" height="52" rx="0"/>
+          <text class="fc-t-main" x="650" y="681" text-anchor="middle">Build HTML Email Body</text>
+          <text class="fc-t-sub"  x="650" y="698" text-anchor="middle">Load ID + Status · inline table</text>
+
+          <!-- Send via SMTP -->
+          <rect class="fc-node-ok" x="550" y="730" width="200" height="40" rx="0"/>
+          <text class="fc-t-main ok" x="650" y="745" text-anchor="middle">Send via SMTP</text>
+          <text class="fc-t-sub"    x="650" y="762" text-anchor="middle">xlsx attached · To / CC / BCC</text>
+
+        </svg>
         </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box process">
-          Launch Chrome + Login
-          <span class="fc-label">download.default_directory pref set</span>
-        </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box process">
-          Navigate → Tender Requests
-          <span class="fc-label">iframe re-entry · nav frame</span>
-        </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box process">
-          Set Search Conditions
-          <span class="fc-label">carrier · status (JS) · logistics group (JS) · date = TODAY</span>
-        </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box process">
-          Customize Columns
-          <span class="fc-label">tmuiduallistboxmoveit · reorder</span>
-        </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box process">
-          Export Data → Popup
-          <span class="fc-label">window_handles switch · submit · poll disk</span>
-        </div>
-        <div class="fc-arrow-down"></div>
-
-        <div class="fc-box decision">File downloaded?</div>
-
-        <div class="fc-row" style="margin-top:0; align-items:flex-start; width:100%; justify-content:center; gap:0;">
-
-          <!-- NO branch -->
-          <div style="display:flex; flex-direction:column; align-items:center; width:240px;">
-            <div style="display:flex; align-items:center;">
-              <div class="fc-arrow-left"></div>
-              <span class="fc-branch-label">No (retry ×5)</span>
-            </div>
-            <div style="height:10px;"></div>
-            <div class="fc-arrow-down"></div>
-            <div class="fc-box end-alert">Failure Alert<span class="fc-label">separate recipients</span></div>
-          </div>
-
-          <!-- YES branch -->
-          <div style="display:flex; flex-direction:column; align-items:center; width:320px;">
-            <div style="display:flex; align-items:center;">
-              <span class="fc-branch-label">Yes</span>
-              <div class="fc-arrow-right"></div>
-            </div>
-            <div style="height:10px;"></div>
-            <div style="width:2px; height:28px; background:#505a6e; position:relative;">
-              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #505a6e;"></div>
-            </div>
-            <div class="fc-box process">
-              Format xlsx
-              <span class="fc-label">column auto-fit · auto filter</span>
-            </div>
-            <div class="fc-arrow-down"></div>
-            <div class="fc-box process">
-              Build HTML Email Body
-              <span class="fc-label">Load ID + Status · inline table</span>
-            </div>
-            <div class="fc-arrow-down"></div>
-            <div class="fc-box end-success">Send via SMTP<span class="fc-label">xlsx attached · To / CC / BCC</span></div>
-          </div>
-
-        </div>
+        <p class="fc-zoom-hint">click to zoom in</p>
       </div>
     </div>
 
-    <div class="dk-section">
-      <p class="dk-label">// error_handling</p>
-      <div class="error-grid">
-        <div class="error-card" style="border-left:3px solid #f87171;">
-          <div class="error-card-title">Login Failure</div>
-          <div class="error-card-desc">Exception propagates to top-level <code>try/except</code>. Browser always closed in <code>finally</code> — no orphaned Chrome processes.</div>
+    <div class="sec">
+      <p class="sec-label">// error_handling</p>
+      <div class="err-grid">
+        <div class="err-card" style="border-left:3px solid var(--red);">
+          <div class="err-title">Login Failure</div>
+          <div class="err-desc">Exception propagates to top-level <code>try/except</code>. Browser always closed in <code>finally</code> — no orphaned Chrome processes.</div>
         </div>
-        <div class="error-card" style="border-left:3px solid #fb923c;">
-          <div class="error-card-title">Export Timeout</div>
-          <div class="error-card-desc">Polls disk for 60s per attempt. Returns <code>None</code> on timeout; retries up to 5×.</div>
+        <div class="err-card" style="border-left:3px solid var(--orange);">
+          <div class="err-title">Export Timeout</div>
+          <div class="err-desc">Polls disk for 60s per attempt. Returns <code>None</code> on timeout; retries up to 5×.</div>
         </div>
-        <div class="error-card" style="border-left:3px solid #f87171;">
-          <div class="error-card-title">All Retries Failed</div>
-          <div class="error-card-desc">Failure alert sent to a separate recipient list with distinct subject — report recipients are not spammed.</div>
+        <div class="err-card" style="border-left:3px solid var(--red);">
+          <div class="err-title">All Retries Failed</div>
+          <div class="err-desc">Failure alert sent to a separate recipient list with distinct subject — report recipients are not spammed.</div>
         </div>
-        <div class="error-card" style="border-left:3px solid #4ade80;">
-          <div class="error-card-title">SMTP Failure</div>
-          <div class="error-card-desc">Caught, logged, returns <code>False</code>. Pipeline does not crash.</div>
+        <div class="err-card" style="border-left:3px solid var(--green);">
+          <div class="err-title">SMTP Failure</div>
+          <div class="err-desc">Caught, logged, returns <code>False</code>. Pipeline does not crash.</div>
         </div>
-        <div class="error-card" style="border-left:3px solid #60a5fa;">
-          <div class="error-card-title">Stale Frame Context</div>
-          <div class="error-card-desc">Frame re-established before every interaction. <code>switch_to_result()</code> / <code>switch_to_nav()</code> called explicitly at each step.</div>
+        <div class="err-card" style="border-left:3px solid var(--blue);">
+          <div class="err-title">Stale Frame Context</div>
+          <div class="err-desc">Frame re-established before every interaction. <code>switch_to_result()</code> / <code>switch_to_nav()</code> called explicitly at each step.</div>
         </div>
-        <div class="error-card" style="border-left:3px solid #a78bfa;">
-          <div class="error-card-title">Same-Day Re-run</div>
-          <div class="error-card-desc">Existing file for same region + date deleted before rename. No locked-file errors on re-runs.</div>
+        <div class="err-card" style="border-left:3px solid var(--purple);">
+          <div class="err-title">Same-Day Re-run</div>
+          <div class="err-desc">Existing file for same region + date deleted before rename. No locked-file errors on re-runs.</div>
         </div>
       </div>
     </div>
@@ -775,26 +810,26 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
+<!-- ══════════════════════════════════════
      PAGE 3 — CODE & HIGHLIGHTS
-══════════════════════════════════════════ -->
+══════════════════════════════════════ -->
 <div class="page" id="page-2">
   <div class="page-inner">
 
-    <div class="dk-section">
-      <p class="dk-label">// code_highlights · main_example.py</p>
-      <div class="code-split">
+    <div class="sec">
+      <p class="sec-label">// code_highlights · main_example.py</p>
+      <div class="code-grid">
 
         <div class="code-card">
-          <div class="code-card-header">
+          <div class="code-card-hdr">
             <span class="code-card-title">Hidden Select via JS + showSelected()</span>
-            <span class="code-tag after">set_search_conditions()</span>
+            <span class="code-tag">set_search_conditions()</span>
           </div>
-          <pre><span class="hl-comment"># status_ is a hidden select element —</span>
-<span class="hl-comment"># JS injection + site's own callback to sync UI</span>
+          <pre><span class="cm"># status_ is a hidden select element —</span>
+<span class="cm"># JS injection + site's own callback to sync UI</span>
 select_elem = self.driver.find_element(
-    By.NAME, <span class="hl-string">'status_'</span>)
-self.driver.execute_script(<span class="hl-string">"""
+    By.NAME, <span class="st">'status_'</span>)
+self.driver.execute_script(<span class="st">"""
     var select = arguments[0];
     var values = arguments[1];
     for (var i = 0; i &lt; select.options.length; i++) {
@@ -804,47 +839,47 @@ self.driver.execute_script(<span class="hl-string">"""
     status_tmcombobox.showSelected();
 """</span>, select_elem, TENDER_STATUS_VALUES)
 
-<span class="hl-comment"># Same pattern for logisticsGroup_</span>
+<span class="cm"># Same pattern for logisticsGroup_</span>
 select_elem = self.driver.find_element(
-    By.NAME, <span class="hl-string">'logisticsGroup_'</span>)
-self.driver.execute_script(<span class="hl-string">"""
+    By.NAME, <span class="st">'logisticsGroup_'</span>)
+self.driver.execute_script(<span class="st">"""
     ...
     logisticsGroup_tmcombobox.showSelected();
 """</span>, select_elem, logistics_groups)</pre>
         </div>
 
         <div class="code-card">
-          <div class="code-card-header">
+          <div class="code-card-hdr">
             <span class="code-card-title">Popup Window + Disk Poll</span>
-            <span class="code-tag after">export_results()</span>
+            <span class="code-tag">export_results()</span>
           </div>
-          <pre><span class="hl-comment"># Submit button is inside a popup window</span>
+          <pre><span class="cm"># Submit button is inside a popup window</span>
 handles = self.driver.window_handles
-<span class="hl-keyword">if</span> len(handles) > <span class="hl-num">1</span>:
-    self.driver.switch_to.window(handles[<span class="hl-num">-1</span>])
-WebDriverWait(self.driver, <span class="hl-num">120</span>).until(
+<span class="kw">if</span> len(handles) > <span class="nm">1</span>:
+    self.driver.switch_to.window(handles[<span class="nm">-1</span>])
+WebDriverWait(self.driver, <span class="nm">120</span>).until(
     EC.element_to_be_clickable(
-        (By.ID, <span class="hl-string">'buttonEmphasized'</span>))).click()
+        (By.ID, <span class="st">'buttonEmphasized'</span>))).click()
 
-<span class="hl-comment"># Poll disk until file appears (up to 60s)</span>
-end_time = time.time() + <span class="hl-num">60</span>
-file = <span class="hl-keyword">None</span>
-<span class="hl-keyword">while</span> time.time() < end_time:
-    <span class="hl-keyword">for</span> f <span class="hl-keyword">in</span> download_dir.iterdir():
-        <span class="hl-keyword">if</span> f.suffix == <span class="hl-string">'.xlsx'</span> <span class="hl-keyword">and</span> <span class="hl-string">'TM_ExportData'</span> <span class="hl-keyword">in</span> f.name:
+<span class="cm"># Poll disk until file appears (up to 60s)</span>
+end_time = time.time() + <span class="nm">60</span>
+file = <span class="kw">None</span>
+<span class="kw">while</span> time.time() < end_time:
+    <span class="kw">for</span> f <span class="kw">in</span> download_dir.iterdir():
+        <span class="kw">if</span> f.suffix == <span class="st">'.xlsx'</span> <span class="kw">and</span> <span class="st">'TM_ExportData'</span> <span class="kw">in</span> f.name:
             file = f
-            <span class="hl-keyword">break</span>
-    <span class="hl-keyword">if</span> file: <span class="hl-keyword">break</span>
-    time.sleep(<span class="hl-num">1</span>)</pre>
+            <span class="kw">break</span>
+    <span class="kw">if</span> file: <span class="kw">break</span>
+    time.sleep(<span class="nm">1</span>)</pre>
         </div>
 
         <div class="code-card">
-          <div class="code-card-header">
+          <div class="code-card-hdr">
             <span class="code-card-title">Dual-Listbox Column Reorder</span>
-            <span class="code-tag after">customize_columns()</span>
+            <span class="code-tag">customize_columns()</span>
           </div>
-          <pre><span class="hl-comment"># 1. Remove all unwanted columns from toList</span>
-self.driver.execute_script(<span class="hl-string">"""
+          <pre><span class="cm"># 1. Remove all unwanted columns from toList</span>
+self.driver.execute_script(<span class="st">"""
     var keep = arguments[0];
     var toList = document.ListCustomizationForm.toList;
     for (var i = 0; i &lt; toList.options.length; i++) {
@@ -856,57 +891,56 @@ self.driver.execute_script(<span class="hl-string">"""
         mandatoryColumns, null, true);
 """</span>, TO_LIST_VALUES)
 
-<span class="hl-comment"># 2. Add wanted columns, 3. Sort to required order</span>
-<span class="hl-comment"># — all via tmuiduallistboxmoveit, no DOM clicks</span></pre>
+<span class="cm"># 2. Add wanted columns, 3. Sort to required order</span>
+<span class="cm"># — all via tmuiduallistboxmoveit, no DOM clicks</span></pre>
         </div>
 
         <div class="code-card">
-          <div class="code-card-header">
+          <div class="code-card-hdr">
             <span class="code-card-title">Multi-Region Dispatch via RUNS Dict</span>
-            <span class="code-tag after">__main__</span>
+            <span class="code-tag">__main__</span>
           </div>
           <pre>RUNS = {
-    <span class="hl-string">'region_a'</span>: {
-        <span class="hl-string">'logistics_groups'</span>: [<span class="hl-string">'GRP1'</span>, <span class="hl-string">'GRP2'</span>, <span class="hl-string">'GRP3'</span>],
-        <span class="hl-string">'label'</span>: <span class="hl-string">'Region A'</span>,
-        <span class="hl-string">'region'</span>: <span class="hl-string">'RegionA'</span>,
+    <span class="st">'region_a'</span>: {
+        <span class="st">'logistics_groups'</span>: [<span class="st">'GRP1'</span>, <span class="st">'GRP2'</span>, <span class="st">'GRP3'</span>],
+        <span class="st">'label'</span>: <span class="st">'Region A'</span>,
+        <span class="st">'region'</span>: <span class="st">'RegionA'</span>,
     },
-    <span class="hl-comment"># ...</span>
+    <span class="cm"># ...</span>
 }
 
-<span class="hl-comment"># Each bat file passes one key; RUNS resolves it</span>
-<span class="hl-comment"># to logistics groups + output filename</span>
-<span class="hl-keyword">if</span> len(sys.argv) < <span class="hl-num">2</span> <span class="hl-keyword">or</span> sys.argv[<span class="hl-num">1</span>] <span class="hl-keyword">not in</span> RUNS:
-    log.error(<span class="hl-string">f"Usage: main.py [</span><span class="hl-var">{'|'.join(RUNS.keys())}</span><span class="hl-string">]"</span>)
-    sys.exit(<span class="hl-num">1</span>)
+<span class="cm"># Each bat file passes one key; RUNS resolves it</span>
+<span class="cm"># to logistics groups + output filename</span>
+<span class="kw">if</span> len(sys.argv) < <span class="nm">2</span> <span class="kw">or</span> sys.argv[<span class="nm">1</span>] <span class="kw">not in</span> RUNS:
+    log.error(<span class="st">f"Usage: main.py [</span><span class="vr">{'|'.join(RUNS.keys())}</span><span class="st">]"</span>)
+    sys.exit(<span class="nm">1</span>)
 
-run = RUNS[sys.argv[<span class="hl-num">1</span>]]
-crawl.set_search_conditions(run[<span class="hl-string">'logistics_groups'</span>])
+run = RUNS[sys.argv[<span class="nm">1</span>]]
+crawl.set_search_conditions(run[<span class="st">'logistics_groups'</span>])
 exported_file = crawl.export_results(
-    download_dir, run[<span class="hl-string">'region'</span>])</pre>
+    download_dir, run[<span class="st">'region'</span>])</pre>
         </div>
 
       </div>
     </div>
 
-    <!-- Dev Process -->
-    <div class="dk-section">
-      <p class="dk-label">// dev_process · Claude Code Conversations</p>
+    <div class="sec">
+      <p class="sec-label">// dev_process · Claude Code Conversations</p>
       <div class="convo-grid">
 
         <div class="convo-card">
-          <div class="convo-header">Hidden Select — Root Cause First</div>
+          <div class="convo-hdr">Hidden Select — Root Cause First</div>
           <div class="convo-body">
             <div class="msg">
-              <div class="msg-avatar user">TJ</div>
-              <div class="msg-bubble">
+              <div class="avatar avatar-u">TJ</div>
+              <div class="bubble">
                 The status dropdown doesn't respond to Selenium's <code>Select</code> class.
                 Inspected the element — it's hidden. What's the right approach?
               </div>
             </div>
             <div class="msg">
-              <div class="msg-avatar claude">C</div>
-              <div class="msg-bubble claude-bubble">
+              <div class="avatar avatar-c">C</div>
+              <div class="bubble bubble-c">
                 The element is hidden so Selenium can't interact with it directly.
                 The site exposes a JS callback — <code>status_tmcombobox.showSelected()</code> —
                 that syncs the hidden select to the visible UI. Set values via <code>execute_script</code>,
@@ -917,19 +951,19 @@ exported_file = crawl.export_results(
         </div>
 
         <div class="convo-card">
-          <div class="convo-header">Multi-Region — One Entry Point</div>
+          <div class="convo-hdr">Multi-Region — One Entry Point</div>
           <div class="convo-body">
             <div class="msg">
-              <div class="msg-avatar user">TJ</div>
-              <div class="msg-bubble">
+              <div class="avatar avatar-u">TJ</div>
+              <div class="bubble">
                 3 regions, each needs different logistics groups and its own output filename.
                 Don't want 3 separate scripts — one entry point, one <code>RUNS</code> dict,
                 bat file passes the key.
               </div>
             </div>
             <div class="msg">
-              <div class="msg-avatar claude">C</div>
-              <div class="msg-bubble claude-bubble">
+              <div class="avatar avatar-c">C</div>
+              <div class="bubble bubble-c">
                 Done. <code>RUNS</code> maps each key to logistics groups, label, and region slug.
                 <code>sys.argv[1]</code> resolves the config at runtime.
                 Bat files are the only difference between region runs.
@@ -939,18 +973,18 @@ exported_file = crawl.export_results(
         </div>
 
         <div class="convo-card">
-          <div class="convo-header">Popup Export — window_handles</div>
+          <div class="convo-hdr">Popup Export — window_handles</div>
           <div class="convo-body">
             <div class="msg">
-              <div class="msg-avatar user">TJ</div>
-              <div class="msg-bubble">
+              <div class="avatar avatar-u">TJ</div>
+              <div class="bubble">
                 Export opens a popup window with a Submit button.
                 <code>find_element</code> throws — the button isn't in the main frame.
               </div>
             </div>
             <div class="msg">
-              <div class="msg-avatar claude">C</div>
-              <div class="msg-bubble claude-bubble">
+              <div class="avatar avatar-c">C</div>
+              <div class="bubble bubble-c">
                 The popup is a separate browser window, not an iframe.
                 Switch to it via <code>window_handles[-1]</code>, click Submit,
                 poll disk until the file appears, close the popup,
@@ -961,18 +995,18 @@ exported_file = crawl.export_results(
         </div>
 
         <div class="convo-card">
-          <div class="convo-header">Failure Alert — Separate Recipients</div>
+          <div class="convo-hdr">Failure Alert — Separate Recipients</div>
           <div class="convo-body">
             <div class="msg">
-              <div class="msg-avatar user">TJ</div>
-              <div class="msg-bubble">
+              <div class="avatar avatar-u">TJ</div>
+              <div class="bubble">
                 If all 5 export attempts fail, I want an alert — but to a different list
                 than the normal report recipients. Subject should be distinct too.
               </div>
             </div>
             <div class="msg">
-              <div class="msg-avatar claude">C</div>
-              <div class="msg-bubble claude-bubble">
+              <div class="avatar avatar-c">C</div>
+              <div class="bubble bubble-c">
                 Added <code>EMAIL_TO_FAILURE</code> / <code>EMAIL_SUBJECT_FAILURE</code> in config.
                 Success and failure paths are fully decoupled — neither list receives the other's messages.
               </div>
@@ -991,10 +1025,170 @@ exported_file = crawl.export_results(
 </footer>
 
 <script>
-  function switchTab(index) {
-    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
-    document.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === index));
+  /* ══ TYPING ANIMATION ══ */
+  function initCodeCard(card) {
+    const pre = card.querySelector('pre');
+    if (!pre || card._typingInit) return;
+    card._typingInit = true;
+
+    pre.querySelectorAll('span[class]').forEach(s => {
+      s.dataset.color = getComputedStyle(s).color;
+    });
+
+    function wrapChars(node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const frag = document.createDocumentFragment();
+        for (const ch of node.textContent) {
+          const s = document.createElement('span');
+          s.className = 'char';
+          s.textContent = ch;
+          frag.appendChild(s);
+        }
+        node.replaceWith(frag);
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        Array.from(node.childNodes).forEach(wrapChars);
+        if (node.dataset.color) {
+          node.querySelectorAll('.char:not([data-color])').forEach(c => {
+            c.dataset.color = node.dataset.color;
+          });
+        }
+      }
+    }
+    Array.from(pre.childNodes).forEach(wrapChars);
+    pre.querySelectorAll('.char:not([data-color])').forEach(c => { c.dataset.color = '#e6edf3'; });
+
+    const cursor = document.createElement('span');
+    cursor.className = 'type-cursor';
+    cursor.style.display = 'none';
+    pre.appendChild(cursor);
+
+    card._chars  = Array.from(pre.querySelectorAll('.char'));
+    card._cursor = cursor;
+    card._typing = false;
   }
+
+  function replayCode(card) {
+    if (card._typing) return;
+    card._typing = true;
+    card._cursor.style.display = 'inline-block';
+    card._chars.forEach(c => { c.style.color = 'transparent'; });
+
+    const batch = Math.max(1, Math.floor(card._chars.length / 280));
+    let i = 0;
+    function tick() {
+      if (i >= card._chars.length) {
+        card._cursor.style.display = 'none';
+        card._typing = false;
+        return;
+      }
+      for (let b = 0; b < batch && i < card._chars.length; b++, i++) {
+        card._chars[i].style.color = card._chars[i].dataset.color;
+      }
+      setTimeout(tick, 10);
+    }
+    setTimeout(tick, 80);
+  }
+
+  function initConvoCard(card) {
+    if (card._typingInit) return;
+    card._typingInit = true;
+    card._msgs   = Array.from(card.querySelectorAll('.msg'));
+    card._typing = false;
+  }
+
+  function replayConvo(card) {
+    if (card._typing) return;
+    card._typing = true;
+    card._msgs.forEach(m => m.classList.remove('visible'));
+    card._msgs.forEach((m, i) => {
+      setTimeout(() => {
+        m.classList.add('visible');
+        if (i === card._msgs.length - 1) card._typing = false;
+      }, 150 + i * 480);
+    });
+  }
+
+  let page2Inited = false;
+  function initPage2() {
+    if (page2Inited) return;
+    page2Inited = true;
+
+    document.querySelectorAll('.code-card').forEach(initCodeCard);
+    document.querySelectorAll('.convo-card .msg').forEach(m => m.classList.add('visible'));
+    document.querySelectorAll('.convo-card').forEach(initConvoCard);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        observer.unobserve(el);
+        if (el.classList.contains('code-card'))  replayCode(el);
+        if (el.classList.contains('convo-card')) replayConvo(el);
+      });
+    }, { threshold: 0.35 });
+
+    document.querySelectorAll('.code-card, .convo-card').forEach(c => observer.observe(c));
+  }
+
+  function switchTab(i) {
+    document.querySelectorAll('.tab').forEach((t, j) => t.classList.toggle('active', j === i));
+    document.querySelectorAll('.page').forEach((p, j) => p.classList.toggle('active', j === i));
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (i === 2) initPage2();
+
+    document.querySelectorAll('.page.active .anim-fade-up').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight;
+      el.style.animation = '';
+    });
+
+    if (i === 1) {
+      const edges = document.querySelectorAll('#fc-svg .fc-edge.animated');
+      edges.forEach(el => el.classList.remove('run'));
+      requestAnimationFrame(() => {
+        edges.forEach((el, idx) => {
+          const len = el.getTotalLength ? el.getTotalLength() : 100;
+          el.style.setProperty('--len', len);
+          el.style.strokeDasharray  = len;
+          el.style.strokeDashoffset = len;
+          setTimeout(() => el.classList.add('run'), idx * 80);
+        });
+      });
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const edges = document.querySelectorAll('#fc-svg .fc-edge');
+    edges.forEach(el => {
+      const len = el.getTotalLength ? el.getTotalLength() : 80;
+      el.style.setProperty('--len', len);
+    });
+
+    const container = document.querySelector('.fc-svg-container');
+    const hint = document.querySelector('.fc-zoom-hint');
+
+    function getOrigin(e) {
+      const rect = container.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const xPct = ((clientX - rect.left) / rect.width  * 100).toFixed(1) + '%';
+      const yPct = ((clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
+      return `${xPct} ${yPct}`;
+    }
+
+    function toggleZoom(e) {
+      e.preventDefault();
+      const zooming = !container.classList.contains('zoomed');
+      if (zooming) container.style.transformOrigin = getOrigin(e);
+      container.classList.toggle('zoomed', zooming);
+      if (hint) hint.textContent = zooming ? 'click to zoom out' : 'click to zoom in';
+    }
+
+    if (container) {
+      container.addEventListener('click', toggleZoom);
+      container.addEventListener('touchstart', toggleZoom, { passive: false });
+    }
+  });
 </script>
 
 </body>
