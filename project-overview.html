@@ -490,6 +490,31 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── Horizontal station timeline (Overview) ── */
+    @keyframes glow-h-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,.5), 0 0 10px rgba(74,222,128,.2); }
+      50%      { box-shadow: 0 0 0 7px rgba(74,222,128,0), 0 0 22px rgba(74,222,128,.5); }
+    }
+    .station-track-h { display: flex; align-items: center; gap: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border); padding: 24px 28px; }
+    .station-h { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 120px; position: relative; flex-shrink: 0; }
+    .station-h-dot { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--bg-deep); display: flex; align-items: center; justify-content: center; position: relative; z-index: 1; }
+    .station-h-dot-inner { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .station-h.done .station-h-dot   { border-color: rgba(96,165,250,.6); background: rgba(96,165,250,.08); }
+    .station-h.done .station-h-dot-inner { background: var(--blue); }
+    .station-h.pending .station-h-dot { border-color: rgba(251,191,36,.5); background: rgba(251,191,36,.05); }
+    .station-h.pending .station-h-dot-inner { background: var(--yellow); opacity: .6; }
+    .live-h-dot { border-color: rgba(74,222,128,.75) !important; background: rgba(74,222,128,.1) !important; animation: glow-h-pulse 2.2s ease infinite; }
+    .live-h-dot .station-h-dot-inner { background: var(--green) !important; }
+    .station-h-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-align: center; color: var(--text-3); }
+    .station-h-label.done    { color: var(--blue); }
+    .station-h-label.pending { color: var(--yellow); }
+    .station-h-label.live    { color: var(--green); }
+    .station-h-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; font-weight: 600; color: var(--text-3); text-align: center; }
+    .station-h-sub.live { color: var(--green); }
+    .station-h-rail { flex: 1; height: 2px; min-width: 32px; background: var(--blue); opacity: 0.45; position: relative; top: -10px; }
+    .station-h-rail.pending { background: var(--yellow); opacity: 0.3; }
+    .station-h-rail.dim     { background: var(--border); opacity: 0.35; }
+
     /* ── Responsive ── */
     @media (max-width: 768px) {
       .hdr { padding: 0 20px; min-height: 60px; }
@@ -575,6 +600,35 @@
     </div>
 
     <div class="sec">
+      <p class="sec-label">// dev_timeline</p>
+      <div class="station-track-h">
+        <div class="station-h done">
+          <div class="station-h-dot"><div class="station-h-dot-inner"></div></div>
+          <div class="station-h-label done">BRD REVIEW</div>
+          <div class="station-h-sub">4 hours</div>
+        </div>
+        <div class="station-h-rail done"></div>
+        <div class="station-h done">
+          <div class="station-h-dot"><div class="station-h-dot-inner"></div></div>
+          <div class="station-h-label done">DEVELOPMENT</div>
+          <div class="station-h-sub">5 days</div>
+        </div>
+        <div class="station-h-rail done"></div>
+        <div class="station-h done">
+          <div class="station-h-dot"><div class="station-h-dot-inner"></div></div>
+          <div class="station-h-label done">TESTING / QA</div>
+          <div class="station-h-sub">1 week</div>
+        </div>
+        <div class="station-h-rail done"></div>
+        <div class="station-h done">
+          <div class="station-h-dot live-h-dot"><div class="station-h-dot-inner"></div></div>
+          <div class="station-h-label live">GO-LIVE</div>
+          <div class="station-h-sub live">Active</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
       <p class="sec-label">// regional_runs</p>
       <div class="regions-grid">
         <div class="region-card anim-fade-up d1">
@@ -616,17 +670,17 @@
         <div class="feat-card anim-fade-up d1">
           <div class="feat-tag">AUTOMATION</div>
           <div class="feat-title">Hidden Selects via JavaScript</div>
-          <div class="feat-desc">Status and logistics group dropdowns are hidden <code>&lt;select&gt;</code> elements. Values set via <code>execute_script</code> + site's own <code>showSelected()</code> to sync the UI — Selenium click alone cannot reach them.</div>
+          <div class="feat-desc">Status and logistics group dropdowns are hidden <code>&lt;select&gt;</code> elements. Values set via <code>execute_script</code> + the site's own <code>showSelected()</code>. Standard Selenium clicks can't reach them.</div>
         </div>
         <div class="feat-card anim-fade-up d2">
           <div class="feat-tag">NAVIGATION</div>
           <div class="feat-title">Nested iframe Re-entry</div>
-          <div class="feat-desc">Portal wraps content in nested iframes. Frame context re-established before every interaction via <code>switch_to_result()</code> / <code>switch_to_nav()</code> to prevent stale element errors.</div>
+          <div class="feat-desc">Portal wraps content in nested iframes. Frame context re-established before every interaction via <code>switch_to_result()</code> / <code>switch_to_nav()</code>.</div>
         </div>
         <div class="feat-card anim-fade-up d3">
           <div class="feat-tag">EXPORT</div>
           <div class="feat-title">Popup Window Handling</div>
-          <div class="feat-desc">Export submit opens a new browser window. Driver switches via <code>window_handles</code>, submits, polls disk for the file, closes popup, returns to main — all without user interaction.</div>
+          <div class="feat-desc">Export opens a new browser window. Driver switches via <code>window_handles</code>, submits, polls disk, closes the popup, then returns to the main window.</div>
         </div>
         <div class="feat-card anim-fade-up d4">
           <div class="feat-tag">DISPATCH</div>
@@ -636,12 +690,12 @@
         <div class="feat-card anim-fade-up d5">
           <div class="feat-tag">COLUMN</div>
           <div class="feat-title">Dual-Listbox API Injection</div>
-          <div class="feat-desc">Column customization calls the site's own <code>tmuiduallistboxmoveit</code> function via <code>execute_script</code> — columns moved, filtered, and reordered to match the required layout.</div>
+          <div class="feat-desc">Column customization calls the site's own <code>tmuiduallistboxmoveit</code> via <code>execute_script</code> to move, filter, and reorder columns to the required layout.</div>
         </div>
         <div class="feat-card anim-fade-up d6">
           <div class="feat-tag">EMAIL</div>
           <div class="feat-title">HTML Summary in Body</div>
-          <div class="feat-desc">Only Load ID and Status columns extracted and rendered as inline HTML table. Recipients see the summary without opening the attachment.</div>
+          <div class="feat-desc">Load ID and Status columns rendered as an inline HTML table in the email body. No attachment needed to see the summary.</div>
         </div>
       </div>
     </div>
@@ -782,7 +836,7 @@
       <div class="err-grid">
         <div class="err-card" style="border-left:3px solid var(--red);">
           <div class="err-title">Login Failure</div>
-          <div class="err-desc">Exception propagates to top-level <code>try/except</code>. Browser always closed in <code>finally</code> — no orphaned Chrome processes.</div>
+          <div class="err-desc">Exception propagates to top-level <code>try/except</code>. Browser closed in <code>finally</code>, preventing orphaned Chrome processes.</div>
         </div>
         <div class="err-card" style="border-left:3px solid var(--orange);">
           <div class="err-title">Export Timeout</div>
@@ -790,7 +844,7 @@
         </div>
         <div class="err-card" style="border-left:3px solid var(--red);">
           <div class="err-title">All Retries Failed</div>
-          <div class="err-desc">Failure alert sent to a separate recipient list with distinct subject — report recipients are not spammed.</div>
+          <div class="err-desc">Failure alert sent to a separate recipient list with a distinct subject. Report recipients are unaffected.</div>
         </div>
         <div class="err-card" style="border-left:3px solid var(--green);">
           <div class="err-title">SMTP Failure</div>
@@ -929,35 +983,35 @@ exported_file = crawl.export_results(
       <div class="convo-grid">
 
         <div class="convo-card">
-          <div class="convo-hdr">Hidden Select — Root Cause First</div>
+          <div class="convo-hdr">Hidden Select: JS Callback via execute_script</div>
           <div class="convo-body">
             <div class="msg">
               <div class="avatar avatar-u">TJ</div>
               <div class="bubble">
-                The status dropdown doesn't respond to Selenium's <code>Select</code> class.
-                Inspected the element — it's hidden. What's the right approach?
+                Status dropdown is a hidden <code>&lt;select&gt;</code>. Selenium's <code>Select</code> class won't work.
+                Set the value via <code>execute_script</code>, then fire <code>status_tmcombobox.showSelected()</code>
+                to sync it to the visible UI.
               </div>
             </div>
             <div class="msg">
               <div class="avatar avatar-c">C</div>
               <div class="bubble bubble-c">
-                The element is hidden so Selenium can't interact with it directly.
-                The site exposes a JS callback — <code>status_tmcombobox.showSelected()</code> —
-                that syncs the hidden select to the visible UI. Set values via <code>execute_script</code>,
-                then call that function to commit the selection.
+                Implemented. <code>execute_script</code> sets the hidden select value,
+                then <code>showSelected()</code> commits it to the visible combobox.
+                Wrapped in a helper so every status change goes through the same path.
               </div>
             </div>
           </div>
         </div>
 
         <div class="convo-card">
-          <div class="convo-hdr">Multi-Region — One Entry Point</div>
+          <div class="convo-hdr">Multi-Region: One Entry Point</div>
           <div class="convo-body">
             <div class="msg">
               <div class="avatar avatar-u">TJ</div>
               <div class="bubble">
                 3 regions, each needs different logistics groups and its own output filename.
-                Don't want 3 separate scripts — one entry point, one <code>RUNS</code> dict,
+                One entry point, one <code>RUNS</code> dict.
                 bat file passes the key.
               </div>
             </div>
@@ -973,34 +1027,32 @@ exported_file = crawl.export_results(
         </div>
 
         <div class="convo-card">
-          <div class="convo-hdr">Popup Export — window_handles</div>
+          <div class="convo-hdr">Popup Export: window_handles switch</div>
           <div class="convo-body">
             <div class="msg">
               <div class="avatar avatar-u">TJ</div>
               <div class="bubble">
-                Export opens a popup window with a Submit button.
-                <code>find_element</code> throws — the button isn't in the main frame.
+                Export spawns a new browser window, not an iframe. Switch to <code>window_handles[-1]</code>,
+                click Submit, poll disk until the file lands, then <code>switch_to.window(handles[0])</code>.
               </div>
             </div>
             <div class="msg">
               <div class="avatar avatar-c">C</div>
               <div class="bubble bubble-c">
-                The popup is a separate browser window, not an iframe.
-                Switch to it via <code>window_handles[-1]</code>, click Submit,
-                poll disk until the file appears, close the popup,
-                then switch back to <code>handles[0]</code>.
+                Done. Handle switch, Submit click, and disk poll all in one helper.
+                Main window restored via <code>handles[0]</code> after close.
               </div>
             </div>
           </div>
         </div>
 
         <div class="convo-card">
-          <div class="convo-hdr">Failure Alert — Separate Recipients</div>
+          <div class="convo-hdr">Failure Alert: Separate Recipients</div>
           <div class="convo-body">
             <div class="msg">
               <div class="avatar avatar-u">TJ</div>
               <div class="bubble">
-                If all 5 export attempts fail, I want an alert — but to a different list
+                If all 5 export attempts fail, send an alert to a separate list,
                 than the normal report recipients. Subject should be distinct too.
               </div>
             </div>
@@ -1008,7 +1060,7 @@ exported_file = crawl.export_results(
               <div class="avatar avatar-c">C</div>
               <div class="bubble bubble-c">
                 Added <code>EMAIL_TO_FAILURE</code> / <code>EMAIL_SUBJECT_FAILURE</code> in config.
-                Success and failure paths are fully decoupled — neither list receives the other's messages.
+                Success and failure paths are independent. Neither list receives the other's messages.
               </div>
             </div>
           </div>
